@@ -151,16 +151,28 @@ class ApiRequest
                 if ($uriSegments[0] === 'ims' && $uriSegments[1] === 'subscriber' && isset($uriSegments[2])) {
                     $phoneNumber = $uriSegments[2];
                     $handleRequest = function ($phoneNumber, $data) {
+                        foreach ($data as $item) {
+                            if (!is_array($item)) {
+                                http_response_code(400);
+                                return json_encode([
+                                    'message' => "Invalid entry, it must be collection of subscriber object wrap with []"
+                                ]);
+                            }
+                            if (!$this->validationService->validateSubscriberData($item)) {
+                                http_response_code($this->validationService->getResponseStatus());
+                                return json_encode([
+                                    'message' => $this->validationService->getResponse()
+                                ]);
+                            }
+                        }
+
                         $resources = $this->resourceService->getResources($_ENV['RESOURCES']);
 
                         foreach ($resources as &$resource) {
                             if ($resource['phoneNumber'] == $phoneNumber) {
                                 $resource['username'] = $data[0]['username'];
-                                // Use password_hash() with bcrypt algorithm
                                 $hashedPassword = password_hash($data[0]['password'], PASSWORD_BCRYPT);
-                                // Update the resource with the hashed password
-                                // Todo: password must have salt as extra layer of security
-                                $resource['password'] = $hashedPassword;
+                                $resource['password'] = $hashedPassword; // Todo: password must have salt as extra layer of security
                                 $resource['domain'] = $data[0]['domain'];
                                 $resource['status'] = strtoupper($data[0]['status']);
                                 $resource["features"]["callForwardNoReply"]["provisioned"] = $data[0]["features"]["callForwardNoReply"]["provisioned"];
@@ -185,52 +197,6 @@ class ApiRequest
 
                     $requestBody = file_get_contents('php://input');
                     $data = json_decode($requestBody, true);
-
-                    // the idea that instead of object, array is accepted to support multiple update
-
-                    if (!isset($data[0]["username"])) {
-                        http_response_code(400);
-                        echo json_encode(['message' => 'Username is required']);
-                        return;
-                    }
-                    if (!isset($data[0]["password"])) {
-                        http_response_code(400);
-                        echo json_encode(['message' => 'Password is required']);
-                        return;
-                    }
-                    if (isset($data[0]["domain"])) {
-                        if (!filter_var($data[0]["domain"], FILTER_VALIDATE_DOMAIN)) {
-                            http_response_code(400);
-                            echo json_encode(['message' => 'Invalid domain']);
-                            return;
-                        }
-                    }
-                    if (isset($data[0]["status"])) {
-                        $allowedStatuses = ['active', 'inactive', 'suspended'];
-                        if (!in_array($data[0]["status"], $allowedStatuses)) {
-                            http_response_code(400);
-                            echo json_encode(['message' => 'Invalid status']);
-                            return;
-                        }
-                    }
-                    if (isset($data[0]["features"]["callForwardNoReply"])) {
-                        if (!empty($data[0]["features"]["callForwardNoReply"])) {
-                            if (isset($data[0]["features"]["callForwardNoReply"]["provisioned"])) {
-                                if (!is_bool($data[0]["features"]["callForwardNoReply"]["provisioned"])) {
-                                    http_response_code(400);
-                                    echo json_encode(['message' => 'Invalid provisioned value']);
-                                    return;
-                                }
-                            }
-                            if (isset($data[0]["features"]["callForwardNoReply"]["destination"])) {
-                                if (!filter_var($data[0]["features"]["callForwardNoReply"]["destination"], FILTER_VALIDATE_REGEXP, ['options' => ['regexp' => '/^tel:\+\d+$/']])) {
-                                    http_response_code(400);
-                                    echo json_encode(['message' => 'Invalid destination phone number']);
-                                    return;
-                                }
-                            }
-                        }
-                    }
 
                     echo $handleRequest($phoneNumber, $data);
                 } else {
