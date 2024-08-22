@@ -24,51 +24,29 @@ class ApiRequest
      */
     public function handleRequest()
     {
-        $route = true;
         $method = $_SERVER['REQUEST_METHOD'];
         $uri = trim(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH), '/');
         $uriSegments = explode('/', $uri);
 
+        $handler = new SubscriberHandler($this->resourceService, $this->validationService);
+
+        $response = null;
+
         switch ($method) {
             case 'POST':
-                $handler = new SubscriberHandler($this->resourceService, $this->validationService);
                 $response = $handler->handlePost($uriSegments);
-
-                if (is_null($response)) {
-                    $route = false;
-                } else {
-                    echo $response;
-                }
                 break;
 
             case 'GET':
-                $handler = new SubscriberHandler($this->resourceService, $this->validationService);
                 $response = $handler->handleGet($uriSegments);
-                if (is_null($response)) {
-                    $route = false;
-                } else {
-                    echo $response;
-                }
                 break;
 
             case 'DELETE':
-                $handler = new SubscriberHandler($this->resourceService, $this->validationService);
                 $response = $handler->handleDelete($uriSegments);
-                if (is_null($response)) {
-                    $route = false;
-                } else {
-                    echo $response;
-                }
                 break;
 
             case 'PUT':
-                $handler = new SubscriberHandler($this->resourceService, $this->validationService);
                 $response = $handler->handlePut($uriSegments);
-                if (is_null($response)) {
-                    $route = false;
-                } else {
-                    echo $response;
-                }
                 break;
 
             default:
@@ -77,7 +55,9 @@ class ApiRequest
                 break;
         }
 
-        if ($route === false) {
+        if (!is_null($response)) {
+            echo $response;
+        } else {
             http_response_code(404);
             echo json_encode(['message' => 'Route not found']);
         }
