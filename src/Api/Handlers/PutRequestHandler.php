@@ -42,9 +42,11 @@ class PutRequestHandler implements RequestHandlerInterface
             foreach ($resources as &$resource) {
                 if ($resource['phoneNumber'] == $phoneNumber) {
                     $found = true;
+
+                    // Todo: This $data[0] could be the issue when given many subscriber object
                     $resource['username'] = $data[0]['username'];
                     $hashedPassword = password_hash($data[0]['password'], PASSWORD_BCRYPT);
-                    $resource['password'] = $hashedPassword; // Todo: password must have salt as extra layer of security
+                    $resource['password'] = $hashedPassword;
                     $resource['domain'] = $data[0]['domain'];
                     $resource['status'] = strtoupper($data[0]['status']);
                     $resource["features"]["callForwardNoReply"]["provisioned"] = $data[0]["features"]["callForwardNoReply"]["provisioned"];

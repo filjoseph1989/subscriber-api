@@ -14,8 +14,10 @@ class RequestHandleFactory
     private $resourceService;
     private $validationService;
 
-    public function __construct(ResourceService $resourceService, ValidationService $validationService)
-    {
+    public function __construct(
+        ResourceService $resourceService,
+        ValidationService $validationService
+    ) {
         $this->resourceService = $resourceService;
         $this->validationService = $validationService;
     }

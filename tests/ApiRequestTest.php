@@ -1,110 +1,97 @@
 <?php
 
-namespace Api;
-
+use Api\ApiRequest;
+use Api\Contracts\RequestHandlerInterface;
+use Api\Handlers\GetRequestHandler;
+use Factory\ApiRequestFactory;
+use Factory\RequestHandleFactory;
 use PHPUnit\Framework\TestCase;
+use GuzzleHttp\Client;
 use Services\ResourceService;
-use PHPUnit\Framework\MockObject\MockObject;
+use Services\ValidationService;
 
 class ApiRequestTest extends TestCase
 {
-    /**
-     * @var ApiRequest
-     */
+    private $validationServiceMock;
+    private $requestHandleFactoryMock;
+    private $requestHandlerMock;
     private $apiRequest;
-
-    /**
-     * @var ResourceService|MockObject
-     */
-    private $resourceServiceMock;
 
     protected function setUp(): void
     {
-        $this->resourceServiceMock = $this->createMock(ResourceService::class);
-        $this->apiRequest = new ApiRequest($this->resourceServiceMock);
+        $this->requestHandleFactoryMock = $this->createMock(RequestHandleFactory::class);
+        $this->requestHandlerMock = $this->createMock(RequestHandlerInterface::class);
+        $this->apiRequest = new ApiRequest($this->requestHandleFactoryMock);
+    }
+
+    protected function tearDown(): void
+    {
+        // tear down code here
     }
 
     public function testGetSubscriberSuccess(): void
     {
-        // Mock the getResources method to return a sample resource
-        $this->resourceServiceMock
-            ->expects($this->once())
-            ->method('getResources')
-            ->with('path/to/resource.json')
-            ->willReturn([
-                ['phoneNumber' => '1234567890', 'name' => 'John Doe'],
-                ['phoneNumber' => '0987654321', 'name' => 'Jane Doe'],
-            ]);
-
-        // Simulate the request environment
         $_SERVER['REQUEST_METHOD'] = 'GET';
         $_SERVER['REQUEST_URI'] = '/ims/subscriber/1234567890';
-        $_ENV['RESOURCES'] = 'path/to/resource.json';
 
-        // Capture the output
+        $expectedResponse = json_encode([
+            'phoneNumber' => '1234567890',
+            'name' => 'John Doe'
+        ]);
+
+        $this->requestHandleFactoryMock
+            ->expects($this->once())
+            ->method('getHandler')
+            ->with('GET')
+            ->willReturn($this->requestHandlerMock);
+
+        $this->requestHandlerMock
+            ->expects($this->once())
+            ->method('handle')
+            ->with(['ims', 'subscriber', '1234567890'])
+            ->willReturn($expectedResponse);
+
         ob_start();
         $this->apiRequest->handleRequest();
         $output = ob_get_clean();
 
-        // Assert the expected response
-        $expectedResponse = json_encode(['phoneNumber' => '1234567890', 'name' => 'John Doe']);
         $this->assertJsonStringEqualsJsonString($expectedResponse, $output);
     }
 
-    public function testGetSubscriberNotFound(): void
+    public function testMethodNotAllowed(): void
     {
-        // Mock the getResources method to return a sample resource
-        $this->resourceServiceMock
+        $_SERVER['REQUEST_METHOD'] = 'PATCH';
+        $_SERVER['REQUEST_URI'] = '/ims/subscriber/1234567890';
+
+        $this->requestHandleFactoryMock
             ->expects($this->once())
-            ->method('getResources')
-            ->with('path/to/resource.json')
-            ->willReturn([
-                ['phoneNumber' => '0987654321', 'name' => 'Jane Doe'],
-            ]);
+            ->method('getHandler')
+            ->with('PATCH')
+            ->willReturn(null);
 
-        // Simulate the request environment
-        $_SERVER['REQUEST_METHOD'] = 'GET';
-        $_SERVER['REQUEST_URI'] = '/ims/subscriber/1234567890';
-        $_ENV['RESOURCES'] = 'path/to/resource.json';
-
-        // Capture the output
         ob_start();
         $this->apiRequest->handleRequest();
         $output = ob_get_clean();
 
-        // Assert the expected response
-        $expectedResponse = json_encode(['message' => 'Contact not found']);
-        $this->assertJsonStringEqualsJsonString($expectedResponse, $output);
-    }
-
-    public function testInvalidMethod(): void
-    {
-        // Simulate the request environment
-        $_SERVER['REQUEST_METHOD'] = 'POST';
-        $_SERVER['REQUEST_URI'] = '/ims/subscriber/1234567890';
-
-        // Capture the output
-        ob_start();
-        $this->apiRequest->handleRequest();
-        $output = ob_get_clean();
-
-        // Assert the expected response
         $expectedResponse = json_encode(['message' => 'Method not allowed']);
         $this->assertJsonStringEqualsJsonString($expectedResponse, $output);
     }
 
-    public function testInvalidRoute(): void
+    public function testMethodNotFound(): void
     {
-        // Simulate the request environment
         $_SERVER['REQUEST_METHOD'] = 'GET';
-        $_SERVER['REQUEST_URI'] = '/invalid/route';
+        $_SERVER['REQUEST_URI'] = '/ims/subscriber/';
 
-        // Capture the output
+        $this->requestHandleFactoryMock
+            ->expects($this->once())
+            ->method('getHandler')
+            ->with('GET')
+            ->willReturn($this->requestHandlerMock);
+
         ob_start();
         $this->apiRequest->handleRequest();
         $output = ob_get_clean();
 
-        // Assert the expected response
         $expectedResponse = json_encode(['message' => 'Route not found']);
         $this->assertJsonStringEqualsJsonString($expectedResponse, $output);
     }
