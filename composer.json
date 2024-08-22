@@ -9,6 +9,8 @@
     "autoload": {
         "psr-4": {
             "Api\\": "src/Api/",
+            "Api\\Handler\\": "src/Api/Handler/",
+            "Api\\Contracts\\": "src/Api/Contracts/",
             "Services\\": "src/Services/",
             "Factory\\": "src/Factory/"
         }

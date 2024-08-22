@@ -13,6 +13,6 @@ class ApiRequestFactory
         $resourceService = new ResourceService();
         $validationService = new ValidationService();
 
-        return new ApiRequest($resourceService, $validationService);
+        return new ApiRequest(new RequestHandleFactory($resourceService, $validationService));
     }
 }
