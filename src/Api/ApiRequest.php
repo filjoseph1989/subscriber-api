@@ -5,14 +5,16 @@ namespace Api;
 class ApiRequest
 {
     private $resourceService;
+    private $validationService;
 
     /**
      * Instantiate the ApiRequest class
      * @param mixed $resourceService
      */
-    public function __construct($resourceService)
+    public function __construct($resourceService, $validationService)
     {
         $this->resourceService = $resourceService;
+        $this->validationService = $validationService;
     }
 
     /**
@@ -31,55 +33,11 @@ class ApiRequest
                 if ($uriSegments[0] === 'ims' && $uriSegments[1] === 'subscriber' && !isset($uriSegments[2])) {
                     $handleRequest = function ($data) {
                         $resources = $this->resourceService->getResources($_ENV['RESOURCES']);
-
-                        // Validate the input data
-                        if (!isset($data["phoneNumber"])) {
-                            http_response_code(400);
-                            echo json_encode(['message' => 'Phone number is required']);
-                            return;
-                        }
-                        if (!isset($data["username"])) {
-                            http_response_code(400);
-                            echo json_encode(['message' => 'Username is required']);
-                            return;
-                        }
-                        if (!isset($data["password"])) {
-                            http_response_code(400);
-                            echo json_encode(['message' => 'Password is required']);
-                            return;
-                        }
-                        if (isset($data["domain"])) {
-                            if (!filter_var($data["domain"], FILTER_VALIDATE_DOMAIN)) {
-                                http_response_code(400);
-                                echo json_encode(['message' => 'Invalid domain']);
-                                return;
-                            }
-                        }
-                        if (isset($data["status"])) {
-                            $allowedStatuses = ['ACTIVE', 'INACTIVE', 'SUSPENDED'];
-                            if (!in_array($data["status"], $allowedStatuses)) {
-                                http_response_code(400);
-                                echo json_encode(['message' => 'Invalid status']);
-                                return;
-                            }
-                        }
-                        if (isset($data["features"]["callForwardNoReply"])) {
-                            if (!empty($data["features"]["callForwardNoReply"])) {
-                                if (isset($data["features"]["callForwardNoReply"]["provisioned"])) {
-                                    if (!is_bool($data["features"]["callForwardNoReply"]["provisioned"])) {
-                                        http_response_code(400);
-                                        echo json_encode(['message' => 'Invalid provisioned value']);
-                                        return;
-                                    }
-                                }
-                                if (isset($data["features"]["callForwardNoReply"]["destination"])) {
-                                    if (!filter_var($data["features"]["callForwardNoReply"]["destination"], FILTER_VALIDATE_REGEXP, ['options' => ['regexp' => '/^tel:\+\d+$/']])) {
-                                        http_response_code(400);
-                                        echo json_encode(['message' => 'Invalid destination phone number']);
-                                        return;
-                                    }
-                                }
-                            }
+                        if (!$this->validationService->validateSubscriberData($data)) {
+                            http_response_code($this->validationService->getResponseStatus());
+                            return json_encode([
+                                'message' => $this->validationService->getResponse()
+                            ]);
                         }
 
                         // Hash the password before storing it
