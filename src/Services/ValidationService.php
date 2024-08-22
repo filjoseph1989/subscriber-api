@@ -38,7 +38,7 @@ class ValidationService
             }
         }
         if (isset($data["status"])) {
-            $allowedStatuses = ['ACTIVE', 'INACTIVE', 'SUSPENDED'];
+            $allowedStatuses = ['ACTIVE', 'INACTIVE', 'SUSPENDED', 'DISABLED', 'DELETED', 'UNKNOWN'];
             if (!in_array($data["status"], $allowedStatuses)) {
                 $this->responseStatus = 400;
                 $this->response = json_encode(['message' => 'Invalid status']);
