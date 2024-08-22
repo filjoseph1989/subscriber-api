@@ -1,6 +1,8 @@
 <?php
 
+require __DIR__ . '/../vendor/autoload.php';
 
+use Services\ResourceService;
 
 // Set load environment variables from .env file
 $rootDir = dirname(__DIR__);
@@ -21,23 +23,22 @@ if ($uriSegments[0] === 'ims' && $uriSegments[1] === 'subscriber' && isset($uriS
 
     switch ($method) {
         case 'GET':
-            $contact = null;
+            $handleRequest = function ($phoneNumber) {
+                $resources = (new ResourceService())->getResources($_ENV['RESOURCES']);
 
-            $resources = json_decode($resources, true);
-
-            foreach ($resources as $resource) {
-                if ($resource['phoneNumber'] == $phoneNumber) {
-                    $contact = $resource;
-                    break;
+                foreach ($resources as $resource) {
+                    if ($resource['phoneNumber'] == $phoneNumber) {
+                        return json_encode($resource);
+                    }
                 }
-            }
 
-            if ($contact) {
-                echo json_encode($contact);
-            } else {
                 http_response_code(404);
-                echo json_encode(['message' => 'Contact not found']);
-            }
+                return json_encode([
+                    'message' => 'Contact not found'
+                ]);
+            };
+
+            echo $handleRequest($phoneNumber);
             break;
 
         default:
