@@ -1,6 +1,6 @@
 <?php
 
-namespace Api\Handler;
+namespace Api\Handlers;
 
 use Api\Contracts\RequestHandlerInterface;
 use Services\ResourceService;

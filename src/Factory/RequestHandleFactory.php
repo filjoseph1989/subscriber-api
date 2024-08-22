@@ -2,10 +2,10 @@
 
 namespace Factory;
 
-use Api\Handler\DeleteRequestHandler;
-use Api\Handler\GetRequestHandler;
-use Api\Handler\PostRequestHandler;
-use Api\Handler\PutRequestHandler;
+use Api\Handlers\DeleteRequestHandler;
+use Api\Handlers\GetRequestHandler;
+use Api\Handlers\PostRequestHandler;
+use Api\Handlers\PutRequestHandler;
 use Services\ResourceService;
 use Services\ValidationService;
 
