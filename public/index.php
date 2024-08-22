@@ -1,5 +1,12 @@
 <?php
 
+
+
+// Set load environment variables from .env file
+$rootDir = dirname(__DIR__);
+$dotenv = Dotenv\Dotenv::createImmutable($rootDir);
+$dotenv->safeLoad();
+
 // Get the request method such get, post, etc
 $method = $_SERVER['REQUEST_METHOD'];
 
