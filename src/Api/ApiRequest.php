@@ -21,13 +21,14 @@ class ApiRequest
      */
     public function handleRequest()
     {
+        $route = true;
         $method = $_SERVER['REQUEST_METHOD'];
         $uri = trim(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH), '/');
         $uriSegments = explode('/', $uri);
 
-        if ($uriSegments[0] === 'ims' && $uriSegments[1] === 'subscriber') {
-            switch ($method) {
-                case 'POST':
+        switch ($method) {
+            case 'POST':
+                if ($uriSegments[0] === 'ims' && $uriSegments[1] === 'subscriber' && !isset($uriSegments[2])) {
                     $handleRequest = function ($data) {
                         $resources = $this->resourceService->getResources($_ENV['RESOURCES']);
 
@@ -90,7 +91,15 @@ class ApiRequest
                             $resources = [];
                             $resources[] = $data;
                         } else if (!is_null($resources) && is_array($resources)) {
-                            $resources[] = $data;
+                            foreach ($resources as $resource) {
+                                if ($resource["phoneNumber"] == $data["phoneNumber"]) {
+                                    return json_encode([
+                                        'message' => "The subscriber {$data["phoneNumber"]} already exists"
+                                    ]);
+                                } else {
+                                    $resources[] = $data;
+                                }
+                            }
                         }
 
                         $response = $this->resourceService->addResource($_ENV['RESOURCES'], $resources);
@@ -112,18 +121,14 @@ class ApiRequest
                     $data = json_decode($requestBody, true);
 
                     echo $handleRequest($data);
-                    break;
+                } else {
+                    $route = false;
+                }
+                break;
 
-                default:
-                    http_response_code(405);
-                    echo json_encode(['message' => 'Method not allowed']);
-                    break;
-            }
-        } else if ($uriSegments[0] === 'ims' && $uriSegments[1] === 'subscriber' && isset($uriSegments[2])) {
-            $phoneNumber = $uriSegments[2];
-
-            switch ($method) {
-                case 'GET':
+            case 'GET':
+                if ($uriSegments[0] === 'ims' && $uriSegments[1] === 'subscriber' && isset($uriSegments[2])) {
+                    $phoneNumber = $uriSegments[2];
                     $handleRequest = function ($phoneNumber) {
                         $resources = $this->resourceService->getResources($_ENV['RESOURCES']);
 
@@ -132,6 +137,7 @@ class ApiRequest
                                 if (isset($resource['password'])) {
                                     $resource['password'] = '';
                                 }
+                                http_response_code(200);
                                 return json_encode($resource);
                             }
                         }
@@ -143,9 +149,49 @@ class ApiRequest
                     };
 
                     echo $handleRequest($phoneNumber);
-                    break;
+                } else {
+                    $route = false;
+                }
+                break;
 
-                case 'PUT':
+            case 'DELETE':
+                if ($uriSegments[0] === 'ims' && $uriSegments[1] === 'subscriber' && isset($uriSegments[2])) {
+                    $phoneNumber = $uriSegments[2];
+                    $handleRequest = function ($phoneNumber) {
+                        $resources = $this->resourceService->getResources($_ENV['RESOURCES']);
+
+                        $isContactDeleted = false;
+                        foreach ($resources as $key => $resource) {
+                            if ($resource['phoneNumber'] == $phoneNumber) {
+                                unset($resources[$key]);
+                                $isContactDeleted = !$isContactDeleted;
+                            }
+                        }
+
+                        if ($isContactDeleted) {
+                            $response = $this->resourceService->updateResource($_ENV['RESOURCES'], array_values($resources));
+                            if ($response) {
+                                http_response_code(201);
+                                return json_encode(['message' => 'Successfully deleted contact information']);
+                            }
+                        }
+
+                        http_response_code(404);
+
+                        return json_encode([
+                            'message' => 'Contact not found'
+                        ]);
+                    };
+
+                    echo $handleRequest($phoneNumber);
+                } else {
+                    $route = false;
+                }
+                break;
+
+            case 'PUT':
+                if ($uriSegments[0] === 'ims' && $uriSegments[1] === 'subscriber' && isset($uriSegments[2])) {
+                    $phoneNumber = $uriSegments[2];
                     $handleRequest = function ($phoneNumber, $data) {
                         $resources = $this->resourceService->getResources($_ENV['RESOURCES']);
 
@@ -229,14 +275,18 @@ class ApiRequest
                     }
 
                     echo $handleRequest($phoneNumber, $data);
-                    break;
+                } else {
+                    $route = false;
+                }
+                break;
 
-                default:
-                    http_response_code(405);
-                    echo json_encode(['message' => 'Method not allowed']);
-                    break;
-            }
-        } else {
+            default:
+                http_response_code(405);
+                echo json_encode(['message' => 'Method not allowed']);
+                break;
+        }
+
+        if ($route === false) {
             http_response_code(404);
             echo json_encode(['message' => 'Route not found']);
         }
