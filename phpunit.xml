@@ -1,0 +1,12 @@
+<phpunit bootstrap="vendor/autoload.php">
+    <testsuites>
+        <testsuite name="Phone Directory API Tests">
+            <directory>./tests</directory>
+        </testsuite>
+    </testsuites>
+    <filter>
+        <whitelist>
+            <directory suffix=".php">./</directory>
+        </whitelist>
+    </filter>
+</phpunit>
