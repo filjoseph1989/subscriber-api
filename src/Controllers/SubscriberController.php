@@ -21,9 +21,8 @@ class SubscriberController
 
     public function getSubscriber(string $phoneNumber)
     {
-        if ($this->subscriberModel == null) {
-            $this->subscriberModel = new SubscriberModel(new Database());
-        }
+        $this->lazyLoadModel();
+
         $subscriber = $this->subscriberModel->getSubscriberByPhoneNumber($phoneNumber);
         if ($subscriber) {
             if (isset($subscriber['password'])) {
@@ -49,9 +48,8 @@ class SubscriberController
         }
 
         try {
-            if ($this->subscriberModel == null) {
-                $this->subscriberModel = new SubscriberModel(new Database());
-            }
+            $this->lazyLoadModel();
+
             $id = $this->subscriberModel->addSubscriber($newSubscriber);
             http_response_code(201); // Created
             echo json_encode([
@@ -76,9 +74,7 @@ class SubscriberController
         }
 
         try {
-            if ($this->subscriberModel == null) {
-                $this->subscriberModel = new SubscriberModel(new Database());
-            }
+            $this->lazyLoadModel();
 
             if (!$this->subscriberModel->phoneNumberExists($updatedSubscriber['phoneNumber'])) {
                 http_response_code(404);
@@ -103,9 +99,7 @@ class SubscriberController
     public function deleteSubscriber(string $phoneNumber)
     {
         try {
-            if ($this->subscriberModel == null) {
-                $this->subscriberModel = new SubscriberModel(new Database());
-            }
+            $this->lazyLoadModel();
 
             if (!$this->subscriberModel->phoneNumberExists($phoneNumber)) {
                 http_response_code(404);
@@ -129,9 +123,7 @@ class SubscriberController
     public function getAllSubscribers(int $limit = 100, int $offset = 0)
     {
         try {
-            if ($this->subscriberModel == null) {
-                $this->subscriberModel = new SubscriberModel(new Database());
-            }
+            $this->lazyLoadModel();
 
             if ($limit > 100) {
                 $this->subscriberModel->setLimit($limit);
@@ -180,5 +172,12 @@ class SubscriberController
     public function getRequestedData()
     {
         return json_decode(file_get_contents('php://input'), true);
+    }
+
+    private function lazyLoadModel()
+    {
+        if ($this->subscriberModel == null) {
+            $this->subscriberModel = new SubscriberModel(new Database());
+        }
     }
 }
