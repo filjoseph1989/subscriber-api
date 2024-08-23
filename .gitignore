@@ -1,4 +1,4 @@
 vendor
 .phpunit.result.cache
-node-http-client
 learn/
+node-http-client/node_modules
