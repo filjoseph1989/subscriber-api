@@ -1,10 +1,11 @@
 <?php
 
 namespace Controllers;
+
+use Interfaces\ValidationServiceInterface;
 use Models\Database;
 use Models\SubscriberModel;
 use PDOException;
-use Services\ValidationService;
 
 class SubscriberController
 {
@@ -12,9 +13,10 @@ class SubscriberController
     private $subscriberModel;
     private $validator;
 
-    public function __construct()
-    {
-        $this->validator = new ValidationService();
+    public function __construct(
+        ValidationServiceInterface $validator
+    ) {
+        $this->validator = $validator;
     }
 
     public function getSubscriber(string $phoneNumber)
@@ -40,7 +42,7 @@ class SubscriberController
     {
         $newSubscriber = $newSubscriber ?? $this->getRequestedData();
 
-        if (!$this->validator->validateSubscriberData($newSubscriber)) {
+        if (!$this->validator->validate($newSubscriber)) {
             http_response_code($this->validator->getResponseStatus());
             echo $this->validator->getResponse();
             return;
@@ -67,7 +69,7 @@ class SubscriberController
     {
         $updatedSubscriber = $updatedSubscriber ?? $this->getRequestedData();
 
-        if (!$this->validator->validateSubscriberData($updatedSubscriber)) {
+        if (!$this->validator->validate($updatedSubscriber)) {
             http_response_code($this->validator->getResponseStatus());
             echo $this->validator->getResponse();
             return;

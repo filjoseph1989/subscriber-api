@@ -9,6 +9,7 @@ use PHPUnit\Framework\TestCase;
 use PDO;
 use PDOException;
 use Dotenv\Dotenv;
+use Services\ValidationService;
 
 class SubscriberControllerTest extends TestCase
 {
@@ -16,6 +17,7 @@ class SubscriberControllerTest extends TestCase
     private $subscriberModel;
     private $databaseMock;
     private $subscriberControllerMock;
+    private $validatorMock;
 
     protected function setUp(): void
     {
@@ -30,10 +32,11 @@ class SubscriberControllerTest extends TestCase
         $this->databaseMock = $this->createMock(Database::class);
         $pdoMock = $this->createMock(PDO::class);
         $this->databaseMock->method('getConnection')->willReturn($pdoMock);
+        $this->validatorMock = $this->createMock(ValidationService::class);
 
         // Mock the SubscriberModel class
         $this->subscriberModel = $this->createMock(SubscriberModel::class);
-        $this->subscriberController = new SubscriberController();
+        $this->subscriberController = new SubscriberController($this->validatorMock);
         $this->subscriberController->setTestSubscriberModel($this->subscriberModel);
     }
 
@@ -121,6 +124,11 @@ class SubscriberControllerTest extends TestCase
             ->with($newSubscriber)
             ->willReturn($mockId);
 
+        $this->validatorMock->expects($this->once())
+            ->method('validate')
+            ->with($newSubscriber)
+            ->willReturn(true);
+
         ob_start(); // Capture output
         $this->subscriberController->addSubscriber($newSubscriber);
         $output = ob_get_clean();
@@ -151,6 +159,11 @@ class SubscriberControllerTest extends TestCase
             ->method('addSubscriber')
             ->with($newSubscriber)
             ->willThrowException(new PDOException('Failed to add subscriber'));
+
+        $this->validatorMock->expects($this->once())
+            ->method('validate')
+            ->with($newSubscriber)
+            ->willReturn(true);
 
         ob_start(); // Capture output
         $this->subscriberController->addSubscriber($newSubscriber);
@@ -184,6 +197,11 @@ class SubscriberControllerTest extends TestCase
             ->with($updatedSubscriber)
             ->willReturn(true);
 
+        $this->validatorMock->expects($this->once())
+            ->method('validate')
+            ->with($updatedSubscriber)
+            ->willReturn(true);
+
         ob_start(); // Capture output
         $this->subscriberController->updateSubscriber($updatedSubscriber);
         $output = ob_get_clean();
@@ -210,6 +228,11 @@ class SubscriberControllerTest extends TestCase
             ->method('phoneNumberExists')
             ->with($updatedSubscriber['phoneNumber'])
             ->willReturn(false);
+
+        $this->validatorMock->expects($this->once())
+            ->method('validate')
+            ->with($updatedSubscriber)
+            ->willReturn(true);
 
         $this->subscriberModel->expects($this->never())->method('updateSubscriber');
 
@@ -244,6 +267,11 @@ class SubscriberControllerTest extends TestCase
             ->method('updateSubscriber')
             ->with($updatedSubscriber)
             ->willReturn(false);
+
+        $this->validatorMock->expects($this->once())
+            ->method('validate')
+            ->with($updatedSubscriber)
+            ->willReturn(true);
 
         ob_start(); // Capture output
         $this->subscriberController->updateSubscriber($updatedSubscriber);

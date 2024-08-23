@@ -2,7 +2,9 @@
 
 namespace Services;
 
-class ValidationService
+use Interfaces\ValidationServiceInterface;
+
+class ValidationService implements ValidationServiceInterface
 {
     private string $response;
     private int $responseStatus;
@@ -12,7 +14,7 @@ class ValidationService
      * @param mixed $data
      * @return bool
      */
-    public function validateSubscriberData($data)
+    public function validate($data)
     {
         // Validate the input data
         if (!isset($data["phoneNumber"])) {
