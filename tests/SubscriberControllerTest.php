@@ -140,8 +140,8 @@ class SubscriberControllerTest extends TestCase
         $output = ob_get_clean();
 
         $expectedOutput = json_encode([
-            'message' => "Subscriber added ID: {$mockId}, Phone Number: {$newSubscriber['phoneNumber']}",
             'id' => $mockId,
+            'message' => "Subscriber added",
             'phoneNumber' => $newSubscriber['phoneNumber'],
         ]);
 
@@ -212,9 +212,13 @@ class SubscriberControllerTest extends TestCase
         $this->subscriberController->updateSubscriber($updatedSubscriber);
         $output = ob_get_clean();
 
-        $expectedOutput = json_encode(['message' => 'Subscriber updated']);
+        $expectedOutput = json_encode([
+            'id' => null,
+            'message' => 'Subscriber updated',
+            'phoneNumber' => null
+        ]);
 
-        $this->assertEquals(200, http_response_code());
+        $this->assertEquals(201, http_response_code());
         $this->assertJsonStringEqualsJsonString($expectedOutput, $output);
     }
 
@@ -308,9 +312,13 @@ class SubscriberControllerTest extends TestCase
         $this->subscriberController->deleteSubscriber($phoneNumber);
         $output = ob_get_clean();
 
-        $expectedOutput = json_encode(['message' => "Subscriber {$phoneNumber} deleted"]);
+        $expectedOutput = json_encode([
+            'id'  => null,
+            'message' => "Subscriber {$phoneNumber} deleted",
+            'phoneNumber' => null
+        ]);
 
-        $this->assertEquals(200, http_response_code());
+        $this->assertEquals(201, http_response_code());
         $this->assertJsonStringEqualsJsonString($expectedOutput, $output);
     }
 
