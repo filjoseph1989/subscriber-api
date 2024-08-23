@@ -374,25 +374,27 @@ class SubscriberControllerTest extends TestCase
     {
         $subscribers = [
             [
-                'phoneNumber' => '1234567890',
-                'username' => 'testuser1',
+                'id' => 3,
+                'phone_number' => '16875189451',
+                'username' => '97287',
                 'password' => 'testpassword1',
-                'domain' => 'testdomain1',
-                'status' => 'active',
+                'domain' => 'ims.mnc660.mcc302.3gppnetwork.org',
+                'status' => 'INACTIVE',
                 'features' => json_encode(['feature1' => true, 'feature2' => false]),
             ],
             [
-                'phoneNumber' => '9876543210',
-                'username' => 'testuser2',
+                'id' => 4,
+                'phone_number' => '16875186700',
+                'username' => '89922',
                 'password' => 'testpassword2',
-                'domain' => 'testdomain2',
-                'status' => 'inactive',
+                'domain' => 'ims.mnc660.mcc302.3gppnetwork.org',
+                'status' => 'INACTIVE',
                 'features' => json_encode(['feature3' => true, 'feature4' => false]),
             ],
         ];
 
-        $limit = 20;
-        $offset = 10;
+        $limit = 100;
+        $offset = 0;
 
         // Mock the getAllSubscribers method
         $this->subscriberModel->expects($this->once())
@@ -404,29 +406,29 @@ class SubscriberControllerTest extends TestCase
         $output = ob_get_clean();
 
         $expectedOutput = json_encode([
-            [
-                'phoneNumber' => '1234567890',
-                'username' => 'testuser1',
-                'password' => '',
-                'domain' => 'testdomain1',
-                'status' => 'active',
-                'features' => ['feature1' => true, 'feature2' => false],
-                'links' => [
-                    'prev' => "/ims/subscriber/all/{$limit}/0",
-                    'next' => "/ims/subscriber/all/{$limit}/30",
+            'data' => [
+                [
+                    'id' => 3,
+                    'phone_number' => '16875189451',
+                    'username' => '97287',
+                    'password' => '',
+                    'domain' => 'ims.mnc660.mcc302.3gppnetwork.org',
+                    'status' => 'INACTIVE',
+                    'features' => ['feature1' => true, 'feature2' => false],
+                ],
+                [
+                    'id' => 4,
+                    'phone_number' => '16875186700',
+                    'username' => '89922',
+                    'password' => '',
+                    'domain' => 'ims.mnc660.mcc302.3gppnetwork.org',
+                    'status' => 'INACTIVE',
+                    'features' => ['feature3' => true, 'feature4' => false],
                 ],
             ],
-            [
-                'phoneNumber' => '9876543210',
-                'username' => 'testuser2',
-                'password' => '',
-                'domain' => 'testdomain2',
-                'status' => 'inactive',
-                'features' => ['feature3' => true, 'feature4' => false],
-                'links' => [
-                    'prev' => "/ims/subscriber/all/{$limit}/0",
-                    'next' => "/ims/subscriber/all/{$limit}/30",
-                ],
+            'links' => [
+                'prev' => "/ims/subscriber/all/{$limit}/0",
+                'next' => "/ims/subscriber/all/{$limit}/{$limit}",
             ],
         ]);
 

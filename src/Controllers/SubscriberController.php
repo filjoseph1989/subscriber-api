@@ -138,12 +138,14 @@ class SubscriberController
 
             $subscribers = $this->subscriberModel->getAllSubscribers();
 
+            $data = [];
             foreach ($subscribers as &$subscriber) {
                 $this->sanitizeSubscriber($subscriber);
-                $this->addPaginationLinks($subscriber, $limit, $offset);
+                $data['data'][] = $subscriber;
             }
+            $data['links'] = $this->addPaginationLinks($subscriber, $limit, $offset);
 
-            return $this->respondArrayWithSuccess($subscribers);
+            return $this->respondArrayWithSuccess($data);
         } catch (\Throwable $th) {
             return $this->respondWithError('Failed to retrieve subscribers');
         }
@@ -218,7 +220,7 @@ class SubscriberController
         $nextOffset = $offset + $limit;
         $prevOffset = max(0, $offset - $limit);
 
-        $subscriber['links'] = [
+        return [
             'prev' => "/ims/subscriber/all/{$limit}/{$prevOffset}",
             'next' => "/ims/subscriber/all/{$limit}/{$nextOffset}",
         ];
