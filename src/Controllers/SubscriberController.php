@@ -1,107 +1,96 @@
 <?php
 
 namespace Controllers;
+use Models\Database;
+use Models\SubscriberModel;
+use PDOException;
+use Services\ValidationService;
 
 class SubscriberController
 {
+    private $model;
+    private $validator;
+
+    public function __construct()
+    {
+        $database = new Database();
+        $this->model = new SubscriberModel($database);
+        $this->validator = new ValidationService();
+    }
+
     public function getSubscriber(string $phoneNumber)
     {
-        $resources = file_get_contents($_ENV['RESOURCES']);
-        $resources = json_decode($resources, true);
-
-        foreach ($resources as $resource) {
-            if ($resource['phoneNumber'] == $phoneNumber) {
-                if (isset($resource['password'])) {
-                    $resource['password'] = '';
-                }
-                http_response_code(200);
-                echo json_encode($resource);
-                return;
+        $subscriber = $this->model->getSubscriberByPhoneNumber($phoneNumber);
+        if ($subscriber) {
+            if (isset($subscriber['password'])) {
+                $subscriber['password'] = ''; // Mask the password
             }
+            $subscriber["features"] = json_decode($subscriber["features"], true);
+            http_response_code(200);
+            echo json_encode($subscriber);
+        } else {
+            http_response_code(404);
+            echo json_encode(['message' => 'Contact not found']);
         }
-
-        http_response_code(404);
-        echo json_encode([
-            'message' => 'Contact not found'
-        ]);
     }
 
     public function addSubscriber()
     {
         $newSubscriber = json_decode(file_get_contents('php://input'), true);
-        $resources = $this->getAllResources();
 
-        if (!isset($newSubscriber['phoneNumber'], $newSubscriber['username'], $newSubscriber['password'])) {
-            http_response_code(400);
-            echo json_encode(['message' => 'Invalid data']);
-            return;
+        if (!$this->validator->validateSubscriberData($newSubscriber)) {
+            http_response_code($this->validator->getResponseStatus());
+            echo $this->validator->getResponse();
         }
 
-        // Check if subscriber already exists
-        foreach ($resources as $resource) {
-            if ($resource['phoneNumber'] === $newSubscriber['phoneNumber']) {
-                http_response_code(409); // Conflict
-                echo json_encode(['message' => 'Subscriber already exists']);
-                return;
-            }
+        try {
+            $id = $this->model->addSubscriber($newSubscriber);
+            http_response_code(201); // Created
+            echo json_encode(['message' => 'Subscriber added']);
+        } catch (PDOException $e) {
+            http_response_code(500);
+            echo json_encode(['message' => 'Failed to add subscriber']);
         }
-
-        // Add new subscriber
-        $resources[] = $newSubscriber;
-        $this->saveResources($resources);
-
-        http_response_code(201);
-        echo json_encode(['message' => 'Subscriber added']);
     }
 
     public function updateSubscriber()
     {
         $updatedSubscriber = json_decode(file_get_contents('php://input'), true);
-        $resources = $this->getAllResources();
 
-        foreach ($resources as &$resource) {
-            if ($resource['phoneNumber'] === $updatedSubscriber['phoneNumber']) {
-                // Update subscriber data
-                $resource = array_merge($resource, $updatedSubscriber);
-                $this->saveResources($resources);
-
-                http_response_code(200);
-                echo json_encode(['message' => 'Subscriber updated']);
-                return;
-            }
+        if (!$this->validator->validateSubscriberData($updatedSubscriber)) {
+            http_response_code($this->validator->getResponseStatus());
+            echo $this->validator->getResponse();
         }
 
-        http_response_code(404);
-        echo json_encode(['message' => 'Subscriber not found']);
+        try {
+            $updated = $this->model->updateSubscriber($updatedSubscriber);
+            if ($updated) {
+                http_response_code(200);
+                echo json_encode(['message' => 'Subscriber updated']);
+            } else {
+                http_response_code(404);
+                echo json_encode(['message' => 'Subscriber not found']);
+            }
+        } catch (PDOException $e) {
+            http_response_code(500);
+            echo json_encode(['message' => 'Failed to update subscriber']);
+        }
     }
 
     public function deleteSubscriber(string $phoneNumber)
     {
-        $resources = $this->getAllResources();
-
-        foreach ($resources as $key => $resource) {
-            if ($resource['phoneNumber'] === $phoneNumber) {
-                unset($resources[$key]);
-                $this->saveResources($resources);
-
+        try {
+            $deleted = $this->model->deleteSubscriber($phoneNumber);
+            if ($deleted) {
                 http_response_code(200);
                 echo json_encode(['message' => 'Subscriber deleted']);
-                return;
+            } else {
+                http_response_code(404);
+                echo json_encode(['message' => 'Subscriber not found']);
             }
+        } catch (PDOException $e) {
+            http_response_code(500);
+            echo json_encode(['message' => 'Failed to delete subscriber']);
         }
-
-        http_response_code(404);
-        echo json_encode(['message' => 'Subscriber not found']);
-    }
-
-    private function getAllResources()
-    {
-        $resources = file_get_contents($_ENV['RESOURCES']);
-        return json_decode($resources, true);
-    }
-
-    private function saveResources(array $resources)
-    {
-        file_put_contents($_ENV['RESOURCES'], json_encode(array_values($resources), JSON_PRETTY_PRINT));
     }
 }
