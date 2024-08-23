@@ -2,13 +2,44 @@
 
 namespace Models;
 
+use PDO;
+
 class SubscriberModel
 {
     private $pdo;
+    private int $limit = 100;
+    private int $offset = 0;
 
     public function __construct(Database $database)
     {
         $this->pdo = $database->getConnection();
+    }
+
+    public function __destruct()
+    {
+        $this->pdo = null;
+    }
+
+    public function setLimit(int $limit)
+    {
+        $this->limit = $limit;
+    }
+
+    public function setOffset(int $offset)
+    {
+        $this->offset = $offset;
+    }
+
+    public function getAllSubscribers(): array
+    {
+        $sql = "SELECT * FROM subscribers LIMIT :limit OFFSET :offset";
+
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->bindParam(':limit', $this->limit, PDO::PARAM_INT);
+        $stmt->bindParam(':offset', $this->offset, PDO::PARAM_INT);
+        $stmt->execute();
+
+        return $stmt->fetchAll();
     }
 
     public function getSubscriberByPhoneNumber(string $phoneNumber)

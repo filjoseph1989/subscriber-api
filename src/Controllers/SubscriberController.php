@@ -93,4 +93,28 @@ class SubscriberController
             echo json_encode(['message' => 'Failed to delete subscriber']);
         }
     }
+
+    public function getAllSubscribers(int $limit = 100, int $offset = 0)
+    {
+        try {
+            if ($limit > 100) {
+                $this->model->setLimit($limit);
+            }
+            if ($offset > 0) {
+                $this->model->setOffset($offset);
+            }
+            $subscribers = $this->model->getAllSubscribers();
+
+            foreach ($subscribers as &$resource) {
+                $resource['password'] = ''; // Masking the password
+                $resource["features"] = isset($resource["features"]) ? json_decode($resource["features"], true) : [];
+            }
+
+            http_response_code(200);
+            echo json_encode($subscribers);
+        } catch (\Throwable $th) {
+            http_response_code(500);
+            echo json_encode(['message' => 'Failed to retrieve subscribers'] . $th->getMessage());
+        }
+    }
 }

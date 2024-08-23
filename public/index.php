@@ -17,7 +17,9 @@ $router = new Router();
 
 // Define routes
 $router->addRoute('GET', '/', HomeController::class, 'index');
+$router->addRoute('GET', '/ims/subscriber/all', SubscriberController::class, 'getAllSubscribers');
 $router->addRoute('GET', '/ims/subscriber/{phoneNumber}', SubscriberController::class, 'getSubscriber');
+$router->addRoute('GET', '/ims/subscriber/all/{limit}/{offset}', SubscriberController::class, 'getAllSubscribers');
 $router->addRoute('POST', '/ims/subscriber', SubscriberController::class, 'addSubscriber');
 $router->addRoute('PUT', '/ims/subscriber', SubscriberController::class, 'updateSubscriber');
 $router->addRoute('DELETE', '/ims/subscriber/{phoneNumber}', SubscriberController::class, 'deleteSubscriber');
