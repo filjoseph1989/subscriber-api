@@ -1,5 +1,11 @@
 ## Node Command and Responses
 
+Before running command below make sure you have pnpm install in your system. Then
+
+```bash
+pnpm install
+```
+
 ### 1. Running `node all.js`
 
 When running the command `node all.js`, the response is:

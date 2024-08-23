@@ -174,6 +174,11 @@ class SubscriberController
         return json_decode(file_get_contents('php://input'), true);
     }
 
+    /**
+     * This strategy allows loading modal on demand.
+     * Todo: There will be better implementation of this strategy.
+     * @return void
+     */
     private function lazyLoadModel()
     {
         if ($this->subscriberModel == null) {
