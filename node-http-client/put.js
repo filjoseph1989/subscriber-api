@@ -13,7 +13,7 @@ const subscriber = {
     username: Math.floor(Math.random() * 100000).toString(), // Random username
     password: "p@ssw0rd!", // Use a static password or generate dynamically if needed
     domain: "ims.mnc660.mcc302.3gppnetwork.org",
-    status: "INACTIVE",
+    status: "ACTIVE",
     features: {
         callForwardNoReply: {
             provisioned: true,

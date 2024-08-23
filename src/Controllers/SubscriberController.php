@@ -51,7 +51,7 @@ class SubscriberController
 
     public function addSubscriber(array $newSubscriber = null)
     {
-        $newSubscriber = $newSubscriber ?? $this->request->getRequestedData();
+        $newSubscriber = $newSubscriber ?? $this->request->getRequestData();
 
         if (!$this->validator->validate($newSubscriber)) {
             return $this->respondWithValidationError();
@@ -68,7 +68,7 @@ class SubscriberController
 
     public function updateSubscriber(array $updatedSubscriber = null)
     {
-        $updatedSubscriber = $updatedSubscriber ?? $this->request->getRequestedData();
+        $updatedSubscriber = $updatedSubscriber ?? $this->request->getRequestData();
 
         if (!$this->validator->validate($updatedSubscriber)) {
             return $this->respondWithValidationError();
