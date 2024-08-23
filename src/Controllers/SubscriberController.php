@@ -19,6 +19,11 @@ class SubscriberController
         $this->validator = new ValidationService();
     }
 
+    public function setTestSubscriberModel($model)
+    {
+        $this->subscriberModel = $model;
+    }
+
     public function getSubscriber(string $phoneNumber)
     {
         if ($this->subscriberModel == null) {
