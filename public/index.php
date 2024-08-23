@@ -2,7 +2,6 @@
 
 require __DIR__ . '/../vendor/autoload.php';
 require __DIR__ . '/../src/Router.php';
-require __DIR__ . '/../src/Controllers/HomeController.php';
 
 use Controllers\HomeController;
 use Controllers\SubscriberController;
