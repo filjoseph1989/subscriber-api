@@ -81,4 +81,11 @@ class SubscriberModel
         $stmt = $this->pdo->prepare("DELETE FROM subscribers WHERE phone_number = :phone_number");
         return $stmt->execute(['phone_number' => $phoneNumber]);
     }
+
+    public function phoneNumberExists(int $phoneNumber)
+    {
+        $stmt = $this->pdo->prepare("Select count(*) from subscribers where phone_number = :phone_number");
+        $stmt->execute(['phone_number' => $phoneNumber]);
+        return $stmt->fetchColumn() > 0;
+    }
 }
