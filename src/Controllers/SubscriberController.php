@@ -9,18 +9,22 @@ use Services\ValidationService;
 class SubscriberController
 {
     private $model;
+    private $subscriberModel;
     private $validator;
 
     public function __construct()
     {
-        $database = new Database();
-        $this->model = new SubscriberModel($database);
+        // $database = new Database();
+        // $this->model = new SubscriberModel($database);
         $this->validator = new ValidationService();
     }
 
     public function getSubscriber(string $phoneNumber)
     {
-        $subscriber = $this->model->getSubscriberByPhoneNumber($phoneNumber);
+        if ($this->subscriberModel == null) {
+            $this->subscriberModel = new SubscriberModel(new Database());
+        }
+        $subscriber = $this->subscriberModel->getSubscriberByPhoneNumber($phoneNumber);
         if ($subscriber) {
             if (isset($subscriber['password'])) {
                 $subscriber['password'] = ''; // Mask the password
