@@ -14,8 +14,6 @@ class SubscriberController
 
     public function __construct()
     {
-        // $database = new Database();
-        // $this->model = new SubscriberModel($database);
         $this->validator = new ValidationService();
     }
 
