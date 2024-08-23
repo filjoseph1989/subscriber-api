@@ -9,6 +9,7 @@ use PHPUnit\Framework\TestCase;
 use PDO;
 use PDOException;
 use Dotenv\Dotenv;
+use Services\RequestService;
 use Services\ValidationService;
 
 class SubscriberControllerTest extends TestCase
@@ -18,6 +19,7 @@ class SubscriberControllerTest extends TestCase
     private $databaseMock;
     private $subscriberControllerMock;
     private $validatorMock;
+    private $requestMock;
 
     protected function setUp(): void
     {
@@ -33,10 +35,14 @@ class SubscriberControllerTest extends TestCase
         $pdoMock = $this->createMock(PDO::class);
         $this->databaseMock->method('getConnection')->willReturn($pdoMock);
         $this->validatorMock = $this->createMock(ValidationService::class);
+        $this->requestMock = $this->createMock(RequestService::class);
 
         // Mock the SubscriberModel class
         $this->subscriberModel = $this->createMock(SubscriberModel::class);
-        $this->subscriberController = new SubscriberController($this->validatorMock);
+        $this->subscriberController = new SubscriberController(
+            $this->validatorMock,
+            $this->requestMock
+        );
         $this->subscriberController->setTestSubscriberModel($this->subscriberModel);
     }
 

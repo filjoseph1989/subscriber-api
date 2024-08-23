@@ -1,6 +1,8 @@
 <?php
 
+use Interfaces\RequestServiceInterface;
 use Interfaces\ValidationServiceInterface;
+use Services\RequestService;
 use Services\ValidationService;
 
 class Router
@@ -12,6 +14,7 @@ class Router
     {
         $this->dependencyMap = [
             ValidationServiceInterface::class => ValidationService::class,
+            RequestServiceInterface::class => RequestService::class,
         ];
     }
 

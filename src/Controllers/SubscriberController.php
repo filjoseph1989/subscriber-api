@@ -2,6 +2,7 @@
 
 namespace Controllers;
 
+use Interfaces\RequestServiceInterface;
 use Interfaces\ValidationServiceInterface;
 use Models\Database;
 use Models\SubscriberModel;
@@ -12,11 +13,14 @@ class SubscriberController
     private $model;
     private $subscriberModel;
     private $validator;
+    private $request;
 
     public function __construct(
-        ValidationServiceInterface $validator
+        ValidationServiceInterface $validator,
+        RequestServiceInterface $request,
     ) {
         $this->validator = $validator;
+        $this->request = $request;
     }
 
     public function getSubscriber(string $phoneNumber)
@@ -39,7 +43,7 @@ class SubscriberController
 
     public function addSubscriber(array $newSubscriber = null)
     {
-        $newSubscriber = $newSubscriber ?? $this->getRequestedData();
+        $newSubscriber = $newSubscriber ?? $this->request->getRequestedData();
 
         if (!$this->validator->validate($newSubscriber)) {
             http_response_code($this->validator->getResponseStatus());
@@ -65,7 +69,7 @@ class SubscriberController
 
     public function updateSubscriber(array $updatedSubscriber = null)
     {
-        $updatedSubscriber = $updatedSubscriber ?? $this->getRequestedData();
+        $updatedSubscriber = $updatedSubscriber ?? $this->request->getRequestedData();
 
         if (!$this->validator->validate($updatedSubscriber)) {
             http_response_code($this->validator->getResponseStatus());
@@ -167,11 +171,6 @@ class SubscriberController
     public function setTestSubscriberModel($model)
     {
         $this->subscriberModel = $model;
-    }
-
-    public function getRequestedData()
-    {
-        return json_decode(file_get_contents('php://input'), true);
     }
 
     /**
